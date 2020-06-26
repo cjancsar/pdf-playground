@@ -4,11 +4,8 @@ import * as pdfjsViewer from 'pdfjs-dist/web/pdf_viewer';
 import { SUPPORTED_FORM_FIELD_TYPES, DEFAULT_SCALE } from './constants';
 import { DOCUMENT_ACROFORM_FIELD_MAP } from './config/fw4-2020-field-mapping.config';
 
-// Using the fixed version CDN due to issues with `parcel` and static file handling (that I don't care about).
-pdfjsLib.GlobalWorkerOptions.workerSrc = '//cdnjs.cloudflare.com/ajax/libs/pdf.js/2.4.456/pdf.worker.js';
-const DEFAULT_URL = '/pdfs/fw4.pdf';
-const container = document.getElementById('pageContainer');
-const eventBus = new pdfjsViewer.EventBus();
+const DOCUMENT_URL = '/pdfs/fw4.pdf';
+const CONTAINER_ID = 'formContainer';
 
 /**
  * On page readiness we perform loading of a PDF as well as add some event listeners.
@@ -16,28 +13,8 @@ const eventBus = new pdfjsViewer.EventBus();
 document.addEventListener('DOMContentLoaded', async function () {
   _addEventListenerForGetDataBtn();
 
-  // Fetch the PDF document from the URL using promises.
-  const doc = await pdfjsLib.getDocument(DEFAULT_URL).promise;
-
-  for (var pageNum = 1; pageNum <= doc.numPages; pageNum++) {
-    const pdfPage = await doc.getPage(pageNum);
-
-    var pdfPageView = new pdfjsViewer.PDFPageView({
-      container: container,
-      id: pageNum,
-      scale: DEFAULT_SCALE,
-      defaultViewport: pdfPage.getViewport({ scale: DEFAULT_SCALE }),
-      eventBus: eventBus,
-      annotationLayerFactory: new pdfjsViewer.DefaultAnnotationLayerFactory(),
-      renderInteractiveForms: true,
-    });
-
-    // Associate the actual page with the view and draw it.
-    console.log(await _getSupportedAnnotations(pdfPage));
-
-    pdfPageView.setPdfPage(pdfPage);
-    pdfPageView.draw();
-  }
+  const pdfDocument = new PDFDocument(DOCUMENT_URL);
+  await pdfDocument.loadAndRenderDocument({ containerId: CONTAINER_ID });
 });
 
 /**
@@ -76,4 +53,48 @@ function _addEventListenerForGetDataBtn() {
 async function _getDataButtonClicked() {
   console.log(DOCUMENT_ACROFORM_FIELD_MAP.get('topmostSubform[0].Page1[0].Step1a[0].f1_01[0]'));
   console.log(DOCUMENT_ACROFORM_FIELD_MAP.get('topmostSubform[0].Page1[0].Step1a[0].f1_01[0]')?.value());
+}
+
+class PDFDocument {
+  public supportedAnnotations: any[] = [];
+
+  constructor(private readonly documentUrl: string) {
+    // Using the fixed version CDN due to issues with `parcel` and static file handling (that I don't care about).
+    pdfjsLib.GlobalWorkerOptions.workerSrc = '//cdnjs.cloudflare.com/ajax/libs/pdf.js/2.4.456/pdf.worker.js';
+  }
+
+  /**
+   * Render PDF document (and all pages with ArcForm Support)
+   * Also retrieves (and sets) `PDFDocument.prototype.supportedAnnotations` with extract of form fields.
+   */
+  public async loadAndRenderDocument({ containerId }: { containerId: string }) {
+    const container = document.getElementById(containerId);
+
+    // Fetch the PDF document from the URL using promises.
+    const doc = await pdfjsLib.getDocument(this.documentUrl).promise;
+
+    let supportedAnnotations: any[] = [];
+
+    for (var pageNum = 1; pageNum <= doc.numPages; pageNum++) {
+      const pdfPage = await doc.getPage(pageNum);
+
+      var pdfPageView = new pdfjsViewer.PDFPageView({
+        container: container,
+        id: pageNum,
+        scale: DEFAULT_SCALE,
+        defaultViewport: pdfPage.getViewport({ scale: DEFAULT_SCALE }),
+        eventBus: new pdfjsViewer.EventBus(),
+        annotationLayerFactory: new pdfjsViewer.DefaultAnnotationLayerFactory(),
+        renderInteractiveForms: true,
+      });
+
+      // Associate the actual page with the view and draw it.
+      supportedAnnotations = supportedAnnotations.concat(await _getSupportedAnnotations(pdfPage));
+
+      pdfPageView.setPdfPage(pdfPage);
+      pdfPageView.draw();
+    }
+
+    this.supportedAnnotations = supportedAnnotations;
+  }
 }
