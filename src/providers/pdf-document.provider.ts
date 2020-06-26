@@ -39,8 +39,8 @@ export class PDFDocument {
       // Associate the actual page with the view and draw it.
       supportedAnnotations = supportedAnnotations.concat(await this._getSupportedAnnotations(pdfPage));
 
-      pdfPageView.setPdfPage(pdfPage);
-      pdfPageView.draw();
+      await pdfPageView.setPdfPage(pdfPage);
+      await pdfPageView.draw();
     }
 
     this.supportedAnnotations = supportedAnnotations;
