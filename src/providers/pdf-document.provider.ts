@@ -2,13 +2,27 @@ import * as pdfjsLib from 'pdfjs-dist';
 //@ts-ignore
 import * as pdfjsViewer from 'pdfjs-dist/web/pdf_viewer';
 import { SUPPORTED_FORM_FIELD_TYPES, DEFAULT_SCALE } from '../constants';
+import { FIELD_SELECTOR_LIST } from '../config/fw4-2020-field-mapping.config';
+import { last } from 'lodash';
+import path from 'path';
 
 export class PDFDocument {
   public supportedAnnotations: any[] = [];
 
-  constructor(private readonly documentUrl: string) {
+  constructor(
+    private readonly documentUrl: string,
+    private readonly formFieldMappingMap: Map<string, Map<FIELD_SELECTOR_LIST, any>>
+  ) {
     // Using the fixed version CDN due to issues with `parcel` and static file handling (that I don't care about).
     pdfjsLib.GlobalWorkerOptions.workerSrc = '//cdnjs.cloudflare.com/ajax/libs/pdf.js/2.5.207/pdf.worker.js';
+  }
+
+  private get _pdfFileName(): string {
+    const filename = last(path.normalize(this.documentUrl).split(path.sep));
+    if (!filename) {
+      throw Error('Unable to parse filename.');
+    }
+    return filename;
   }
 
   /**
@@ -47,13 +61,32 @@ export class PDFDocument {
   }
 
   /**
+   * Retrieves all supported annotation form data from the rendered PDF.
+   */
+  public getFormData() {
+    const map = this.formFieldMappingMap.get(this._pdfFileName);
+
+    if (!map) {
+      throw Error('Unmapped pdf encountered.')
+    }
+
+    const formData: any = {}
+
+    for (const expectedField of map.values()) {
+      formData[expectedField.key] = expectedField.getValue()
+    }
+
+    return formData
+  }
+
+  /**
    * Returns the _supported_ (from `SUPPORTED_FORM_FIELD_TYPES`) form annotation properties.
    * @param {PDFPageProxy} pdfPage
    */
   private async _getSupportedAnnotations(pdfPage: any) {
     let annotations = await pdfPage.getAnnotations();
     return annotations
-      .filter((a: any) => a.fieldType === SUPPORTED_FORM_FIELD_TYPES.TEXT)
+      .filter((a: any) => Object.values(SUPPORTED_FORM_FIELD_TYPES).includes(a.fieldType))
       .map((a: any) => ({
         fieldType: a.fieldType,
         fieldName: a.fieldName,

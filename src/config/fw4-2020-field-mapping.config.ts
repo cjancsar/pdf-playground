@@ -11,7 +11,7 @@ export enum FIELD_SELECTOR_LIST {
  *
  * @todo disable fields by name if not on this list
  */
-export const DOCUMENT_ACROFORM_FIELD_MAP = new Map([
+export const DOCUMENT_ACROFORM_FIELD_MAP = new Map<FIELD_SELECTOR_LIST, any>([
   [
     FIELD_SELECTOR_LIST.FIRST_NAME_WITH_LAST_INITIAL,
     {
