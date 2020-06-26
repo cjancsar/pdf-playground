@@ -1,4 +1,4 @@
-import { FIELD_SELECTOR_LIST } from './config/fw4-2020-field-mapping.config';
+import { FIELD_SELECTOR_LIST, DOCUMENT_ACROFORM_FIELD_MAP } from './config/fw4-2020-field-mapping.config';
 import { PDFDocument } from './providers/pdf-document.provider';
 
 const DOCUMENT_URL = '/pdfs/fw4.pdf';
@@ -30,10 +30,5 @@ function _addEventListenerForGetDataBtn() {
  * Collect all data for a given form.
  */
 async function _getDataButtonClicked() {
-  // console.log(DOCUMENT_ACROFORM_FIELD_MAP.get(FIELD_SELECTOR_LIST.FIRST_NAME_WITH_LAST_INITIAL)?.getValue());
-
-  const value = (<HTMLInputElement>document.getElementsByName(FIELD_SELECTOR_LIST.FIRST_NAME_WITH_LAST_INITIAL)[0])
-    ?.value;
-
-  console.log('value', value);
+  console.log(DOCUMENT_ACROFORM_FIELD_MAP.get(FIELD_SELECTOR_LIST.FIRST_NAME_WITH_LAST_INITIAL)?.getValue());
 }

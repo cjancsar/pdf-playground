@@ -8,7 +8,7 @@ export class PDFDocument {
 
   constructor(private readonly documentUrl: string) {
     // Using the fixed version CDN due to issues with `parcel` and static file handling (that I don't care about).
-    pdfjsLib.GlobalWorkerOptions.workerSrc = '//cdnjs.cloudflare.com/ajax/libs/pdf.js/2.4.456/pdf.worker.js';
+    pdfjsLib.GlobalWorkerOptions.workerSrc = '//cdnjs.cloudflare.com/ajax/libs/pdf.js/2.5.207/pdf.worker.js';
   }
 
   /**
