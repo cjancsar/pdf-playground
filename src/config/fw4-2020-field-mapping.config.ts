@@ -14,6 +14,7 @@ export enum FIELD_SELECTOR_LIST {
   // MARRIED_FILING_JOINTLY = "",
   // HEAD_OF_HOUSEHOLD = "",
 
+  // STEP_2_C = "",
   // STEP_4_A = "",
   // STEP_4_B = "",
   // STEP_4_C = "",
