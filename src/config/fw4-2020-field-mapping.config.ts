@@ -8,11 +8,12 @@ export enum FIELD_SELECTOR_LIST {
   ADDRESS_2 = 'topmostSubform[0].Page1[0].Step1a[0].f1_04[0]',
   STEP_3_A = 'topmostSubform[0].Page1[0].Step3_ReadOrder[0].f1_06[0]',
   STEP_3_B = 'topmostSubform[0].Page1[0].Step3_ReadOrder[0].f1_07[0]',
+  STEP_3_SUM = 'topmostSubform[0].Page1[0].f1_08[0]',
 
   // SINGLE_OR_MARRIED_FILING_SEPARATE = "",
   // MARRIED_FILING_JOINTLY = "",
   // HEAD_OF_HOUSEHOLD = "",
-  // STEP_3_SUM = "",
+
   // STEP_4_A = "",
   // STEP_4_B = "",
   // STEP_4_C = "",
@@ -78,6 +79,15 @@ export const DOCUMENT_ACROFORM_FIELD_MAP = new Map<FIELD_SELECTOR_LIST, FieldCon
   [
     FIELD_SELECTOR_LIST.STEP_3_B,
     new FieldConfiguration('step3B_numOtherDependentsTimes500', FIELD_SELECTOR_LIST.STEP_3_B),
+  ],
+  [
+    FIELD_SELECTOR_LIST.STEP_3_SUM,
+    new FieldConfiguration('step3_sum', FIELD_SELECTOR_LIST.STEP_3_SUM, {
+      fieldPropertyMutations: {
+        readonly: true,
+        disabled: true,
+      },
+    }),
   ],
 ]);
 

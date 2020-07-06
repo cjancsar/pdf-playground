@@ -3,7 +3,7 @@ import * as pdfjsLib from 'pdfjs-dist';
 import * as pdfjsViewer from 'pdfjs-dist/web/pdf_viewer';
 import { SUPPORTED_FORM_FIELD_TYPES, DEFAULT_SCALE } from '../constants';
 import { FIELD_SELECTOR_LIST } from '../config/fw4-2020-field-mapping.config';
-import { last, has } from 'lodash';
+import { last } from 'lodash';
 import path from 'path';
 import { FieldConfiguration } from './field-configuration.provider';
 
