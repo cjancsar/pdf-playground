@@ -1,4 +1,5 @@
-import { SUPPORTED_FORM_FIELD_TYPES, SUPPORTED_DATA_TYPES } from 'src/constants';
+import { SUPPORTED_FORM_FIELD_TYPES, SUPPORTED_DATA_TYPES } from '../constants';
+import { IPropertyMutationOptions } from './property-mutation-options';
 
 /**
  * Options to override default field configuration values.
@@ -17,7 +18,7 @@ export interface IFieldConfigurationOptions {
   /**
    * Any input field properties which should be applied to a form input. (i.e. to change a field to readonly)
    */
-  fieldPropertyMutations?: {};
+  fieldPropertyMutations?: IPropertyMutationOptions | undefined;
 
   /**
    * A function to GET the current form field data.

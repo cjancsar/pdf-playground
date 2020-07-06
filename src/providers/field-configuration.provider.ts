@@ -1,11 +1,12 @@
 import { IFieldConfigurationOptions } from '../interfaces/field-configuration-options';
 import { SUPPORTED_FORM_FIELD_TYPES, SUPPORTED_DATA_TYPES } from '../constants';
 import { FIELD_SELECTOR_LIST } from '../config/fw4-2020-field-mapping.config';
+import { IPropertyMutationOptions } from 'src/interfaces/property-mutation-options';
 
 export class FieldConfiguration {
   public readonly fieldType: SUPPORTED_FORM_FIELD_TYPES;
   public readonly dataType: SUPPORTED_DATA_TYPES;
-  private readonly _fieldPropertyMutations: any;
+  private readonly _fieldPropertyMutations: IPropertyMutationOptions | undefined;
   private readonly _getValueFn: () => string;
   private readonly _setValueFn: (value: any) => void;
 
@@ -62,5 +63,16 @@ export class FieldConfiguration {
    */
   public setValue(value: any): void {
     return this._setValueFn(value);
+  }
+
+  /**
+   * Applies any specified property mutations to an element.
+   */
+  public applyMutators() {
+    if (this._fieldPropertyMutations) {
+      for (const [attribute, value] of Object.entries(this._fieldPropertyMutations)) {
+        FieldConfiguration.GET_ELEMENT_BY_NAME(this.fieldSelector).setAttribute(attribute, value.toString());
+      }
+    }
   }
 }

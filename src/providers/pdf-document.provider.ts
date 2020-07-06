@@ -47,7 +47,7 @@ export class PDFDocument {
     await this._loadAndRenderPDFPages();
 
     // Mutate form fields
-    // this.mutateFormFields();
+    this.mutateFormFields();
 
     // Set existing form data
     this.setFormData(this.existingData);
@@ -56,13 +56,11 @@ export class PDFDocument {
   /**
    * Applies mutators to any form field properties
    */
-  // public mutateFormFields() {
-  //   for (const expectedField of this._formFieldMap.values()) {
-  //     if (has(expectedField, 'fieldPropertyMutations')) {
-  //       this._applyMutations(expectedField);
-  //     }
-  //   }
-  // }
+  public mutateFormFields() {
+    for (const expectedField of this._formFieldMap.values()) {
+      expectedField.applyMutators();
+    }
+  }
 
   /**
    * Pre-fills form fields with data.
