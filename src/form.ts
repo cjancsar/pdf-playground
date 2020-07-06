@@ -8,10 +8,26 @@ const CONTAINER_ID = 'formContainer';
  * On page readiness we perform loading of a PDF as well as add some event listeners.
  */
 document.addEventListener('DOMContentLoaded', async function () {
+  /**
+   * We add a "demo" action to collect form data to json.
+   */
   _addEventListenerForGetDataBtn();
 
-  const pdfDocument = new PDFDocument(DOCUMENT_URL, FORM_TO_FIELD_MAPPING);
-  await pdfDocument.loadAndRenderDocument({ containerId: CONTAINER_ID });
+  /**
+   * Simulate the presence of existing form data. This could be from two sources:
+   *   - Static ERP data about an employee (SIN number, Name, DOB, etc.)
+   *   - Cached form data (if the page is reloaded etc.)
+   */
+  const existingData = {
+    firstNameWithMiddleInitial: 'Jon',
+    lastName: 'Snow',
+  };
+
+  /**
+   * Show the interface of interacting with a PDFDocument.
+   */
+  const pdfDocument = new PDFDocument(DOCUMENT_URL, FORM_TO_FIELD_MAPPING, existingData, CONTAINER_ID);
+  await pdfDocument.loadAndRenderDocument();
 
   _customScriptForFW4();
 

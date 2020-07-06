@@ -2,8 +2,8 @@ import * as pdfjsLib from 'pdfjs-dist';
 //@ts-ignore
 import * as pdfjsViewer from 'pdfjs-dist/web/pdf_viewer';
 import { SUPPORTED_FORM_FIELD_TYPES, DEFAULT_SCALE } from '../constants';
-import { FIELD_SELECTOR_LIST, DOCUMENT_ACROFORM_FIELD_MAP } from '../config/fw4-2020-field-mapping.config';
-import { last } from 'lodash';
+import { FIELD_SELECTOR_LIST } from '../config/fw4-2020-field-mapping.config';
+import { last, has } from 'lodash';
 import path from 'path';
 
 export class PDFDocument {
@@ -11,10 +11,21 @@ export class PDFDocument {
 
   constructor(
     private readonly documentUrl: string,
-    private readonly formFieldMappingMap: Map<string, Map<FIELD_SELECTOR_LIST, any>>
+    private readonly formFieldMappingMap: Map<string, Map<FIELD_SELECTOR_LIST, any>>,
+    // todo properly type the data with an interface.
+    private readonly existingData: any,
+    private readonly containerId: string
   ) {
     // Using the fixed version CDN due to issues with `parcel` and static file handling (that I don't care about).
     pdfjsLib.GlobalWorkerOptions.workerSrc = '//cdnjs.cloudflare.com/ajax/libs/pdf.js/2.5.207/pdf.worker.js';
+  }
+
+  private get _formFieldMap(): Map<FIELD_SELECTOR_LIST, any> {
+    const map = this.formFieldMappingMap.get(this._pdfFileName);
+    if (map) {
+      return map
+    }
+    throw Error(`formFieldMappingMap for [${this._pdfFileName}] not found.`)
   }
 
   private get _pdfFileName(): string {
@@ -27,63 +38,29 @@ export class PDFDocument {
 
   /**
    * Render PDF document (and all pages with ArcForm Support)
-   * Also retrieves (and sets) `PDFDocument.prototype.supportedAnnotations` with extract of form fields.
+   *  - Pre-fills any existing form field data
+   *  - Sets all non-editable fields to readonly
+   *  - Adds document-wide scripts (for aggregation and validation)
    */
-  public async loadAndRenderDocument({ containerId }: { containerId: string }) {
-    const container = document.getElementById(containerId);
+  public async loadAndRenderDocument() {
+    // Load and render all pdf pages.
+    await this._loadAndRenderPDFPages()
 
-    // Fetch the PDF document from the URL using promises.
-    const doc = await pdfjsLib.getDocument(this.documentUrl).promise;
-
-    let supportedAnnotations: any[] = [];
-
-    for (var pageNum = 1; pageNum <= doc.numPages; pageNum++) {
-      const pdfPage = await doc.getPage(pageNum);
-
-      var pdfPageView = new pdfjsViewer.PDFPageView({
-        container: container,
-        id: pageNum,
-        scale: DEFAULT_SCALE,
-        defaultViewport: pdfPage.getViewport({ scale: DEFAULT_SCALE }),
-        eventBus: new pdfjsViewer.EventBus(),
-        annotationLayerFactory: new pdfjsViewer.DefaultAnnotationLayerFactory(),
-        renderInteractiveForms: true,
-      });
-
-      // Associate the actual page with the view and draw it.
-      supportedAnnotations = supportedAnnotations.concat(await this._getSupportedAnnotations(pdfPage));
-
-      await pdfPageView.setPdfPage(pdfPage);
-      await pdfPageView.draw();
-
-      // todo, get set of pre-populated form data dynamically, currently hard coding some values
-      // for sake of technical demonstration
-      let prePopulatedFields = new Map<string, any>();
-      prePopulatedFields.set('firstNameWithMiddleInitial', 'Jon');
-      prePopulatedFields.set('lastName', 'Snow');
-      await this.setFormData(prePopulatedFields);
-    }
-
-    this.supportedAnnotations = supportedAnnotations;
+    // Set existing form data
+    this.setFormData(this.existingData);
   }
 
   /**
-   *
-   * @param prePopulatedFormData - map of data to be pre-populated into the form
+   * Pre-fills form fields with data.
+   * Keys of `existingData` must be present with the form field map.
    */
-  public setFormData(prePopulatedFormData: Map<string, any>) {
-    DOCUMENT_ACROFORM_FIELD_MAP.forEach((masterFieldMapEntryValue, masterFieldMapEntryKey) => {
-      prePopulatedFormData.forEach((prePopulatedEntryValue, prePopulatedEntryKey) => {
-        if (masterFieldMapEntryValue.key == prePopulatedEntryKey) {
-          try {
-            (<HTMLInputElement>document.getElementsByName(masterFieldMapEntryKey)[0]).value = prePopulatedEntryValue;
-          } catch (e) {
-            // todo: generic try/catch, expand to be more granular for: mapped field doesn't exist, didn't validate, etc
-            throw Error(`Unable to pre-populate field: asdas`);
-          }
-        }
-      });
-    });
+  public setFormData(existingData: any) {
+    const existingDataFields = [...this._formFieldMap.values()].filter(v => Object.keys(existingData).includes(v.key));
+    existingDataFields.forEach((existingDataField) => {
+      if (has(existingDataField, 'setValue')) {
+        existingDataField.setValue(existingData[existingDataField.key])
+      }
+    })
   }
 
   /**
@@ -103,6 +80,54 @@ export class PDFDocument {
     }
 
     return formData;
+  }
+
+  /**
+   * Load PDF document and pages
+   * Also retrieves (and sets) `PDFDocument.prototype.supportedAnnotations` with extract of form fields.
+   */
+  private async *_loadPDFPages() {
+    const container = document.getElementById(this.containerId);
+
+    // Fetch the PDF document from the URL using promises.
+    const doc = await pdfjsLib.getDocument(this.documentUrl).promise;
+
+    let supportedAnnotations: any[] = [];
+
+    for (let pageNum = 1; pageNum <= doc.numPages; pageNum++) {
+      const pdfPage = await doc.getPage(pageNum);
+
+      const pdfPageView = new pdfjsViewer.PDFPageView({
+        container: container,
+        id: pageNum,
+        scale: DEFAULT_SCALE,
+        defaultViewport: pdfPage.getViewport({ scale: DEFAULT_SCALE }),
+        eventBus: new pdfjsViewer.EventBus(),
+        annotationLayerFactory: new pdfjsViewer.DefaultAnnotationLayerFactory(),
+        renderInteractiveForms: true,
+      });
+
+      // Get any supported annotations on the current page
+      supportedAnnotations = supportedAnnotations.concat(await this._getSupportedAnnotations(pdfPage));
+
+      // Associate the page with a renderer
+      await pdfPageView.setPdfPage(pdfPage);
+
+      // Return the ready renderer
+      yield pdfPageView;
+    }
+
+    // Cache a list of supported annotations within the document.
+    this.supportedAnnotations = supportedAnnotations;
+  }
+
+  /**
+   * Renders all pdf pages
+   */
+  private async _loadAndRenderPDFPages() {
+    for await (const pdfPage of this._loadPDFPages()) {
+      await pdfPage.draw();     
+    }
   }
 
   /**

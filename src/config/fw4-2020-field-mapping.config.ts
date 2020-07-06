@@ -37,6 +37,8 @@ export const DOCUMENT_ACROFORM_FIELD_MAP = new Map<FIELD_SELECTOR_LIST, any>([
       // TODO handle case where field not found or value empty, etc.
       getValue: () =>
         (<HTMLInputElement>document.getElementsByName(FIELD_SELECTOR_LIST.FIRST_NAME_WITH_LAST_INITIAL)[0])?.value,
+      setValue: (value: any) => 
+      (<HTMLInputElement>document.getElementsByName(FIELD_SELECTOR_LIST.FIRST_NAME_WITH_LAST_INITIAL)[0]).value = value
     },
   ],
   [
@@ -47,6 +49,8 @@ export const DOCUMENT_ACROFORM_FIELD_MAP = new Map<FIELD_SELECTOR_LIST, any>([
       dataType: SUPPORTED_DATA_TYPES.TEXT,
       // TODO handle case where field not found or value empty, etc.
       getValue: () => (<HTMLInputElement>document.getElementsByName(FIELD_SELECTOR_LIST.LAST_NAME)[0])?.value,
+      setValue: (value: any) => 
+      (<HTMLInputElement>document.getElementsByName(FIELD_SELECTOR_LIST.LAST_NAME)[0]).value = value
     },
   ],
   [

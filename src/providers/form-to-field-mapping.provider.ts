@@ -1,7 +1,6 @@
 import {
   DOCUMENT_ACROFORM_FIELD_MAP as FW4_MAP,
   FIELD_SELECTOR_LIST,
-  executeCustomScripts,
 } from '../config/fw4-2020-field-mapping.config';
 
 /**
