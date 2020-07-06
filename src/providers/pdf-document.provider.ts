@@ -5,6 +5,7 @@ import { SUPPORTED_FORM_FIELD_TYPES, DEFAULT_SCALE } from '../constants';
 import { FIELD_SELECTOR_LIST } from '../config/fw4-2020-field-mapping.config';
 import { last, has } from 'lodash';
 import path from 'path';
+import { FieldConfiguration } from './field-configuration.provider';
 
 export class PDFDocument {
   public supportedAnnotations: any[] = [];
@@ -12,7 +13,6 @@ export class PDFDocument {
   constructor(
     private readonly documentUrl: string,
     private readonly formFieldMappingMap: Map<string, Map<FIELD_SELECTOR_LIST, any>>,
-    // todo properly type the data with an interface.
     private readonly existingData: any,
     private readonly containerId: string
   ) {
@@ -20,12 +20,12 @@ export class PDFDocument {
     pdfjsLib.GlobalWorkerOptions.workerSrc = '//cdnjs.cloudflare.com/ajax/libs/pdf.js/2.5.207/pdf.worker.js';
   }
 
-  private get _formFieldMap(): Map<FIELD_SELECTOR_LIST, any> {
+  private get _formFieldMap(): Map<FIELD_SELECTOR_LIST, FieldConfiguration> {
     const map = this.formFieldMappingMap.get(this._pdfFileName);
     if (map) {
-      return map
+      return map;
     }
-    throw Error(`formFieldMappingMap for [${this._pdfFileName}] not found.`)
+    throw Error(`formFieldMappingMap for [${this._pdfFileName}] not found.`);
   }
 
   private get _pdfFileName(): string {
@@ -44,11 +44,25 @@ export class PDFDocument {
    */
   public async loadAndRenderDocument() {
     // Load and render all pdf pages.
-    await this._loadAndRenderPDFPages()
+    await this._loadAndRenderPDFPages();
+
+    // Mutate form fields
+    // this.mutateFormFields();
 
     // Set existing form data
     this.setFormData(this.existingData);
   }
+
+  /**
+   * Applies mutators to any form field properties
+   */
+  // public mutateFormFields() {
+  //   for (const expectedField of this._formFieldMap.values()) {
+  //     if (has(expectedField, 'fieldPropertyMutations')) {
+  //       this._applyMutations(expectedField);
+  //     }
+  //   }
+  // }
 
   /**
    * Pre-fills form fields with data.
@@ -56,26 +70,18 @@ export class PDFDocument {
    */
   public setFormData(existingData: any) {
     const existingDataFields = [...this._formFieldMap.values()].filter(v => Object.keys(existingData).includes(v.key));
-    existingDataFields.forEach((existingDataField) => {
-      if (has(existingDataField, 'setValue')) {
-        existingDataField.setValue(existingData[existingDataField.key])
-      }
-    })
+    existingDataFields.forEach(existingDataField => {
+      existingDataField.setValue(existingData[existingDataField.key]);
+    });
   }
 
   /**
    * Retrieves all supported annotation form data from the rendered PDF.
    */
   public getFormData() {
-    const map = this.formFieldMappingMap.get(this._pdfFileName);
-
-    if (!map) {
-      throw Error('Unmapped pdf encountered.');
-    }
-
     const formData: any = {};
 
-    for (const expectedField of map.values()) {
+    for (const expectedField of this._formFieldMap.values()) {
       formData[expectedField.key] = expectedField.getValue();
     }
 
@@ -126,7 +132,7 @@ export class PDFDocument {
    */
   private async _loadAndRenderPDFPages() {
     for await (const pdfPage of this._loadPDFPages()) {
-      await pdfPage.draw();     
+      await pdfPage.draw();
     }
   }
 
@@ -147,4 +153,9 @@ export class PDFDocument {
         subtype: a.subtype,
       }));
   }
+
+  /**
+   * Apply mutations to form input fields
+   */
+  private _applyMutations() {}
 }

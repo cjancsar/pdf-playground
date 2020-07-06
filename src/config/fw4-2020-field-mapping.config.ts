@@ -1,4 +1,4 @@
-import { SUPPORTED_FORM_FIELD_TYPES, SUPPORTED_DATA_TYPES } from '../constants';
+import { FieldConfiguration } from '../providers/field-configuration.provider';
 
 export enum FIELD_SELECTOR_LIST {
   FIRST_NAME_WITH_LAST_INITIAL = 'topmostSubform[0].Page1[0].Step1a[0].f1_01[0]',
@@ -27,53 +27,42 @@ export enum FIELD_SELECTOR_LIST {
  *
  * @todo disable fields by name if not on this list
  */
-export const DOCUMENT_ACROFORM_FIELD_MAP = new Map<FIELD_SELECTOR_LIST, any>([
+export const DOCUMENT_ACROFORM_FIELD_MAP = new Map<FIELD_SELECTOR_LIST, FieldConfiguration>([
   [
     FIELD_SELECTOR_LIST.FIRST_NAME_WITH_LAST_INITIAL,
-    {
-      key: 'firstNameWithMiddleInitial',
-      fieldType: SUPPORTED_FORM_FIELD_TYPES.TEXT,
-      dataType: SUPPORTED_DATA_TYPES.TEXT,
-      // TODO handle case where field not found or value empty, etc.
-      getValue: () =>
-        (<HTMLInputElement>document.getElementsByName(FIELD_SELECTOR_LIST.FIRST_NAME_WITH_LAST_INITIAL)[0])?.value,
-      setValue: (value: any) => 
-      (<HTMLInputElement>document.getElementsByName(FIELD_SELECTOR_LIST.FIRST_NAME_WITH_LAST_INITIAL)[0]).value = value
-    },
+    new FieldConfiguration('firstNameWithMiddleInitial', FIELD_SELECTOR_LIST.FIRST_NAME_WITH_LAST_INITIAL, {
+      fieldPropertyMutations: {
+        readonly: true,
+        disabled: true,
+      },
+    }),
   ],
   [
     FIELD_SELECTOR_LIST.LAST_NAME,
-    {
-      key: 'lastName',
-      fieldType: SUPPORTED_FORM_FIELD_TYPES.TEXT,
-      dataType: SUPPORTED_DATA_TYPES.TEXT,
-      // TODO handle case where field not found or value empty, etc.
-      getValue: () => (<HTMLInputElement>document.getElementsByName(FIELD_SELECTOR_LIST.LAST_NAME)[0])?.value,
-      setValue: (value: any) => 
-      (<HTMLInputElement>document.getElementsByName(FIELD_SELECTOR_LIST.LAST_NAME)[0]).value = value
-    },
+    new FieldConfiguration('lastName', FIELD_SELECTOR_LIST.LAST_NAME, {
+      fieldPropertyMutations: {
+        readonly: true,
+        disabled: true,
+      },
+    }),
   ],
   [
     FIELD_SELECTOR_LIST.NUM_CHILDREN_UNDER_17_TIMES_2000,
-    {
-      key: 'numChildrenUnder17Times2000',
-      fieldType: SUPPORTED_FORM_FIELD_TYPES.TEXT,
-      dataType: SUPPORTED_DATA_TYPES.TEXT,
-      // TODO handle case where field not found or value empty, etc.
-      getValue: () =>
-        (<HTMLInputElement>document.getElementsByName(FIELD_SELECTOR_LIST.NUM_CHILDREN_UNDER_17_TIMES_2000)[0])?.value,
-    },
+    new FieldConfiguration('numChildrenUnder17Times2000', FIELD_SELECTOR_LIST.NUM_CHILDREN_UNDER_17_TIMES_2000, {
+      fieldPropertyMutations: {
+        readonly: true,
+        disabled: true,
+      },
+    }),
   ],
   [
     FIELD_SELECTOR_LIST.NUM_OTHER_DEPENDENTS_TIMES_500,
-    {
-      key: 'numOtherDependentsTimes500',
-      fieldType: SUPPORTED_FORM_FIELD_TYPES.TEXT,
-      dataType: SUPPORTED_DATA_TYPES.TEXT,
-      // TODO handle case where field not found or value empty, etc.
-      getValue: () =>
-        (<HTMLInputElement>document.getElementsByName(FIELD_SELECTOR_LIST.NUM_OTHER_DEPENDENTS_TIMES_500)[0])?.value,
-    },
+    new FieldConfiguration('numOtherDependentsTimes500', FIELD_SELECTOR_LIST.NUM_OTHER_DEPENDENTS_TIMES_500, {
+      fieldPropertyMutations: {
+        readonly: true,
+        disabled: true,
+      },
+    }),
   ],
 ]);
 

@@ -53,7 +53,10 @@ document.addEventListener('DOMContentLoaded', async function () {
    */
   function _customScriptForFW4() {
     //disable summation field
-    (<HTMLInputElement>document.getElementsByName('topmostSubform[0].Page1[0].f1_08[0]')[0]).disabled = true;
+    (<HTMLInputElement>document.getElementsByName('topmostSubform[0].Page1[0].f1_08[0]')[0]).setAttribute(
+      'readOnly',
+      'true'
+    );
 
     // add event listener to the 3 inputs involved with summation
     // will sum up the fields any time any of the 3 fields change
