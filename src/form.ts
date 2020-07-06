@@ -30,14 +30,14 @@ document.addEventListener('DOMContentLoaded', async function () {
   /**
    * TEST TEST TEST TEST TEST
    * captures event when field is changed and updates the summation field
-   * 
+   *
    * currently also setting field to disabled, move this once "custom script" architecture decided on
    * as well as the event listener and helper methods. this should be exposed as part of the map as a "custom"
    * script that is executed if defined for a pdf.
    */
   function _customScriptForFW4() {
     //disable summation field
-    (<HTMLInputElement>document.getElementsByName('topmostSubform[0].Page1[0].f1_08[0]')[0]).disabled = true
+    (<HTMLInputElement>document.getElementsByName('topmostSubform[0].Page1[0].f1_08[0]')[0]).disabled = true;
 
     // add event listener to the 3 inputs involved with summation
     // will sum up the fields any time any of the 3 fields change
@@ -68,16 +68,18 @@ document.addEventListener('DOMContentLoaded', async function () {
    * todo: move this function along with the above function
    */
   function _sumDependentTotalsAndDisplay() {
-    let total = 0
-    total += Number((<HTMLInputElement>document.getElementsByName('topmostSubform[0].Page1[0].Step3_ReadOrder[0].f1_06[0]')[0]).value);
-    total += Number((<HTMLInputElement>document.getElementsByName('topmostSubform[0].Page1[0].Step3_ReadOrder[0].f1_07[0]')[0]).value);
+    let total = 0;
+    total += Number(
+      (<HTMLInputElement>document.getElementsByName('topmostSubform[0].Page1[0].Step3_ReadOrder[0].f1_06[0]')[0]).value
+    );
+    total += Number(
+      (<HTMLInputElement>document.getElementsByName('topmostSubform[0].Page1[0].Step3_ReadOrder[0].f1_07[0]')[0]).value
+    );
     if (total) {
       (<HTMLInputElement>document.getElementsByName('topmostSubform[0].Page1[0].f1_08[0]')[0]).value = total.toString();
+    } else {
+      (<HTMLInputElement>document.getElementsByName('topmostSubform[0].Page1[0].f1_08[0]')[0]).value = 'Error';
     }
-    else {
-      (<HTMLInputElement>document.getElementsByName('topmostSubform[0].Page1[0].f1_08[0]')[0]).value = "Error"
-    }
-    
   }
 
   /**
@@ -86,6 +88,4 @@ document.addEventListener('DOMContentLoaded', async function () {
   async function _getDataButtonClicked() {
     console.log(pdfDocument.getFormData());
   }
-
-  
 });

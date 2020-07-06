@@ -55,12 +55,12 @@ export class PDFDocument {
 
       await pdfPageView.setPdfPage(pdfPage);
       await pdfPageView.draw();
-      
+
       // todo, get set of pre-populated form data dynamically, currently hard coding some values
       // for sake of technical demonstration
-      let prePopulatedFields = new Map<string, any>()
-      prePopulatedFields.set('firstNameWithMiddleInitial','Jon')
-      prePopulatedFields.set('lastName','Snow')
+      let prePopulatedFields = new Map<string, any>();
+      prePopulatedFields.set('firstNameWithMiddleInitial', 'Jon');
+      prePopulatedFields.set('lastName', 'Snow');
       await this.setFormData(prePopulatedFields);
     }
 
@@ -68,24 +68,22 @@ export class PDFDocument {
   }
 
   /**
-   * 
+   *
    * @param prePopulatedFormData - map of data to be pre-populated into the form
    */
-  public setFormData(prePopulatedFormData: Map<string, any>){
+  public setFormData(prePopulatedFormData: Map<string, any>) {
     DOCUMENT_ACROFORM_FIELD_MAP.forEach((masterFieldMapEntryValue, masterFieldMapEntryKey) => {
       prePopulatedFormData.forEach((prePopulatedEntryValue, prePopulatedEntryKey) => {
         if (masterFieldMapEntryValue.key == prePopulatedEntryKey) {
           try {
-
-            (<HTMLInputElement>document.getElementsByName(masterFieldMapEntryKey)[0]).value = prePopulatedEntryValue
-          }
-          // todo: generic try/catch, expand to be more granular for: mapped field doesn't exist, didn't validate, etc
-          catch (e) {
-            throw Error(`Unable to pre-populate field: asdas`)
+            (<HTMLInputElement>document.getElementsByName(masterFieldMapEntryKey)[0]).value = prePopulatedEntryValue;
+          } catch (e) {
+            // todo: generic try/catch, expand to be more granular for: mapped field doesn't exist, didn't validate, etc
+            throw Error(`Unable to pre-populate field: asdas`);
           }
         }
-      })
-    })
+      });
+    });
   }
 
   /**
@@ -95,16 +93,16 @@ export class PDFDocument {
     const map = this.formFieldMappingMap.get(this._pdfFileName);
 
     if (!map) {
-      throw Error('Unmapped pdf encountered.')
+      throw Error('Unmapped pdf encountered.');
     }
 
-    const formData: any = {}
+    const formData: any = {};
 
     for (const expectedField of map.values()) {
-      formData[expectedField.key] = expectedField.getValue()
+      formData[expectedField.key] = expectedField.getValue();
     }
 
-    return formData
+    return formData;
   }
 
   /**
