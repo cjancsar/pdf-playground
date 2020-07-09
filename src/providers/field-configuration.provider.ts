@@ -2,6 +2,7 @@ import { IFieldConfigurationOptions } from '../interfaces/field-configuration-op
 import { SUPPORTED_FORM_FIELD_TYPES, SUPPORTED_DATA_TYPES } from '../constants';
 import { FIELD_SELECTOR_LIST } from '../config/fw4-2020-field-mapping.config';
 import { IPropertyMutationOptions } from 'src/interfaces/property-mutation-options';
+import { isEmpty, get, uniq } from 'lodash';
 
 export class FieldConfiguration {
   public readonly fieldType: SUPPORTED_FORM_FIELD_TYPES;
@@ -39,7 +40,7 @@ export class FieldConfiguration {
   constructor(
     public readonly key: string,
     public readonly fieldSelector: FIELD_SELECTOR_LIST,
-    options: IFieldConfigurationOptions = {}
+    private readonly options: IFieldConfigurationOptions = {}
   ) {
     // Set defaults
     this.fieldType = options.fieldType || SUPPORTED_FORM_FIELD_TYPES.TEXT;
@@ -49,6 +50,37 @@ export class FieldConfiguration {
       options.getValueFn || ((): string => FieldConfiguration.SINGLE_ELEMENT_VALUE_BY_NAME(this.fieldSelector));
     this._setValueFn =
       options.setValueFn || ((value: any) => FieldConfiguration.SET_ELEMENT_VALUE_BY_NAME(value, this.fieldSelector));
+  }
+
+  public get element(): HTMLInputElement {
+    return FieldConfiguration.GET_ELEMENT_BY_NAME(this.fieldSelector);
+  }
+
+  public get isSummable(): boolean {
+    return (
+      !isEmpty(get(this.options, 'options.addendForGroups', [])) ||
+      !isEmpty(get(this.options, 'options.summandForGroups', [])) ||
+      !isEmpty(get(this.options, 'options.sumForGroups', []))
+    );
+  }
+
+  public get summableGroups(): string[] {
+    const addendForGroups = get(this.options, 'options.addendForGroups', []);
+    const summandForGroups = get(this.options, 'options.summandForGroups', []);
+    const sumForGroups = get(this.options, 'options.sumForGroups', []);
+    return uniq([...addendForGroups, ...summandForGroups, ...sumForGroups]);
+  }
+
+  public isAddendForGroup(group: string) {
+    return get(this.options, 'options.addendForGroups', []).includes(group);
+  }
+
+  public isSummandForGroup(group: string) {
+    return get(this.options, 'options.summandForGroups', []).includes(group);
+  }
+
+  public isSumForGroup(group: string) {
+    return get(this.options, 'options.sumForGroups', []).includes(group);
   }
 
   /**

@@ -29,8 +29,6 @@ document.addEventListener('DOMContentLoaded', async function () {
   const pdfDocument = new PDFDocument(DOCUMENT_URL, FORM_TO_FIELD_MAPPING, existingData, CONTAINER_ID);
   await pdfDocument.loadAndRenderDocument();
 
-  _customScriptForFW4();
-
   /**
    * Add an event listener to a button to trigger capture of data.
    */

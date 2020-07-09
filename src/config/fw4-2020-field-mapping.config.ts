@@ -10,6 +10,12 @@ export enum FIELD_SELECTOR_LIST {
   STEP_3_B = 'topmostSubform[0].Page1[0].Step3_ReadOrder[0].f1_07[0]',
   STEP_3_SUM = 'topmostSubform[0].Page1[0].f1_08[0]',
 
+  STEP_4B_1 = 'topmostSubform[0].Page3[0].f3_07[0]',
+  STEP_4B_2 = 'topmostSubform[0].Page3[0].f3_08[0]',
+  STEP_4B_3 = 'topmostSubform[0].Page3[0].f3_09[0]',
+  STEP_4B_4 = 'topmostSubform[0].Page3[0].f3_10[0]',
+  STEP_4B_1_SUM = 'topmostSubform[0].Page3[0].f3_11[0]',
+
   // SINGLE_OR_MARRIED_FILING_SEPARATE = "",
   // MARRIED_FILING_JOINTLY = "",
   // HEAD_OF_HOUSEHOLD = "",
@@ -24,8 +30,6 @@ export enum FIELD_SELECTOR_LIST {
  * A map of all (necessary) Acroform fields (by unique field name) mapped to their internal property name,
  * expected field type, expected data type, etc.
  * Field `names` not specified in this map will be disabled as inputs
- *
- * @todo disable fields by name if not on this list
  */
 export const DOCUMENT_ACROFORM_FIELD_MAP = new Map<FIELD_SELECTOR_LIST, FieldConfiguration>([
   [
@@ -75,11 +79,25 @@ export const DOCUMENT_ACROFORM_FIELD_MAP = new Map<FIELD_SELECTOR_LIST, FieldCon
   ],
   [
     FIELD_SELECTOR_LIST.STEP_3_A,
-    new FieldConfiguration('step3A_numChildrenUnder17Times2000', FIELD_SELECTOR_LIST.STEP_3_A),
+    new FieldConfiguration('step3A_numChildrenUnder17Times2000', FIELD_SELECTOR_LIST.STEP_3_A, {
+      fieldPropertyMutations: {
+        type: 'number',
+      },
+      options: {
+        addendForGroups: ['STEP_3'],
+      },
+    }),
   ],
   [
     FIELD_SELECTOR_LIST.STEP_3_B,
-    new FieldConfiguration('step3B_numOtherDependentsTimes500', FIELD_SELECTOR_LIST.STEP_3_B),
+    new FieldConfiguration('step3B_numOtherDependentsTimes500', FIELD_SELECTOR_LIST.STEP_3_B, {
+      fieldPropertyMutations: {
+        type: 'number',
+      },
+      options: {
+        addendForGroups: ['STEP_3'],
+      },
+    }),
   ],
   [
     FIELD_SELECTOR_LIST.STEP_3_SUM,
@@ -88,34 +106,9 @@ export const DOCUMENT_ACROFORM_FIELD_MAP = new Map<FIELD_SELECTOR_LIST, FieldCon
         readonly: true,
         disabled: true,
       },
+      options: {
+        sumForGroups: ['STEP_3'],
+      },
     }),
   ],
 ]);
-
-/**
- * Runs any custom scripts for this pdf.
- *
- * In the case of the FW4, disable the
- */
-export function executeCustomScripts() {
-  _addEventListenerForSummationTest();
-}
-
-/**
- * TEST TEST TEST TEST TEST
- * captures event when field is changed
- */
-function _addEventListenerForSummationTest() {
-  const firstField = document.getElementsByName('topmostSubform[0].Page1[0].Step3_ReadOrder[0].f1_06[0]')[0];
-  if (firstField) {
-    firstField.addEventListener(
-      'change',
-      () => {
-        console.log('ASDFASDFSADFASDFASDFASDFASDFSADF');
-      },
-      false
-    );
-  } else {
-    throw Error('Could not add event listener');
-  }
-}

@@ -3,7 +3,7 @@ import * as pdfjsLib from 'pdfjs-dist';
 import * as pdfjsViewer from 'pdfjs-dist/web/pdf_viewer';
 import { SUPPORTED_FORM_FIELD_TYPES, DEFAULT_SCALE } from '../constants';
 import { FIELD_SELECTOR_LIST } from '../config/fw4-2020-field-mapping.config';
-import { last } from 'lodash';
+import { last, flatten, uniq, isNumber } from 'lodash';
 import path from 'path';
 import { FieldConfiguration } from './field-configuration.provider';
 
@@ -18,6 +18,10 @@ export class PDFDocument {
   ) {
     // Using the fixed version CDN due to issues with `parcel` and static file handling (that I don't care about).
     pdfjsLib.GlobalWorkerOptions.workerSrc = '//cdnjs.cloudflare.com/ajax/libs/pdf.js/2.5.207/pdf.worker.js';
+  }
+
+  private get _formFields() {
+    return [...this._formFieldMap.values()];
   }
 
   private get _formFieldMap(): Map<FIELD_SELECTOR_LIST, FieldConfiguration> {
@@ -51,13 +55,48 @@ export class PDFDocument {
 
     // Set existing form data
     this.setFormData(this.existingData);
+
+    // Add summation for scripts
+    this.addSummationScripts();
+  }
+
+  /**
+   * Certain fields are "summation only" fields. Multiple fields (addends or summands) are added up and summed into a common
+   * field (the sum).
+   */
+  public addSummationScripts() {
+    // Get all summable fields
+    const summableFields = this._formFields.filter(f => f.isSummable);
+    const allSummationGroups = uniq(flatten(summableFields.map(s => s.summableGroups)));
+
+    for (const summationGroup of allSummationGroups) {
+      const summationGroupFields = summableFields.filter(f => f.summableGroups.includes(summationGroup));
+
+      function _summationEvent(this: HTMLInputElement, ev: Event): any {
+        // Get all field values
+        const addends = summationGroupFields
+          .filter(f => f.isAddendForGroup(summationGroup) && isNumber(Number(f.getValue())))
+          .map(f => Number(f.getValue()))
+          .reduce((a, b) => a + b, 0);
+        const summands = summationGroupFields
+          .filter(f => f.isSummandForGroup(summationGroup) && isNumber(Number(f.getValue())))
+          .map(f => Number(f.getValue()))
+          .reduce((a, b) => a + b, 0);
+
+        // Put totals in sum group
+        const total = addends + summands;
+        summationGroupFields.filter(f => f.isSumForGroup(summationGroup)).forEach(f => f.setValue(total));
+      }
+
+      summationGroupFields.forEach(f => f.element.addEventListener('change', _summationEvent));
+    }
   }
 
   /**
    * Applies mutators to any form field properties
    */
   public mutateFormFields() {
-    for (const expectedField of this._formFieldMap.values()) {
+    for (const expectedField of this._formFields) {
       expectedField.applyMutators();
     }
   }
@@ -67,7 +106,7 @@ export class PDFDocument {
    * Keys of `existingData` must be present with the form field map.
    */
   public setFormData(existingData: any) {
-    const existingDataFields = [...this._formFieldMap.values()].filter(v => Object.keys(existingData).includes(v.key));
+    const existingDataFields = this._formFields.filter(v => Object.keys(existingData).includes(v.key));
     existingDataFields.forEach(existingDataField => {
       existingDataField.setValue(existingData[existingDataField.key]);
     });
@@ -79,7 +118,7 @@ export class PDFDocument {
   public getFormData() {
     const formData: any = {};
 
-    for (const expectedField of this._formFieldMap.values()) {
+    for (const expectedField of this._formFields) {
       formData[expectedField.key] = expectedField.getValue();
     }
 
@@ -151,9 +190,4 @@ export class PDFDocument {
         subtype: a.subtype,
       }));
   }
-
-  /**
-   * Apply mutations to form input fields
-   */
-  private _applyMutations() {}
 }
