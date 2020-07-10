@@ -1,6 +1,6 @@
 import { IFieldConfigurationOptions } from '../interfaces/field-configuration-options';
 import { SUPPORTED_FORM_FIELD_TYPES, SUPPORTED_DATA_TYPES } from '../constants';
-import { FIELD_SELECTOR_LIST } from '../config/fw4-2020-field-mapping.config';
+import { FIELD_SELECTOR_LIST } from '../config/fw4-2020/fw4-2020-field-mapping.config';
 import { IPropertyMutationOptions } from 'src/interfaces/property-mutation-options';
 import { isEmpty, get, uniq } from 'lodash';
 
@@ -26,14 +26,21 @@ export class FieldConfiguration {
   /**
    * Basic field value selector with lookup by name.
    */
-  private static SINGLE_ELEMENT_VALUE_BY_NAME(fieldName: FIELD_SELECTOR_LIST) {
+  public static SINGLE_ELEMENT_VALUE_BY_NAME(fieldName: FIELD_SELECTOR_LIST) {
     return FieldConfiguration.GET_ELEMENT_BY_NAME(fieldName)?.value;
+  }
+
+  /**
+   * Basic field value selector with lookup by name for checkox.
+   */
+  public static CHECKBOX_VALUE_BY_NAME(fieldName: FIELD_SELECTOR_LIST) {
+    return FieldConfiguration.GET_ELEMENT_BY_NAME(fieldName)?.checked || false;
   }
 
   /**
    * Set the value of a field by name
    */
-  private static SET_ELEMENT_VALUE_BY_NAME(value: any, fieldName: FIELD_SELECTOR_LIST): void {
+  public static SET_ELEMENT_VALUE_BY_NAME(value: any, fieldName: FIELD_SELECTOR_LIST): void {
     FieldConfiguration.GET_ELEMENT_BY_NAME(fieldName).value = value;
   }
 
@@ -69,6 +76,10 @@ export class FieldConfiguration {
     const summandForGroups = get(this.options, 'options.summandForGroups', []);
     const sumForGroups = get(this.options, 'options.sumForGroups', []);
     return uniq([...addendForGroups, ...summandForGroups, ...sumForGroups]);
+  }
+
+  public get checkBoxGroup() {
+    return this.options?.options?.checkboxGroup;
   }
 
   public isAddendForGroup(group: string) {

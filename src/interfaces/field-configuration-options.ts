@@ -29,7 +29,7 @@ export interface IFieldConfigurationOptions {
   /**
    * A function to GET the current form field data.
    */
-  getValueFn?: () => string;
+  getValueFn?: () => any;
 
   /**
    * A function to SET the current form field data.

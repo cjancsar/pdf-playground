@@ -13,4 +13,9 @@ export interface IFieldAdditionalOptions {
    * If this field is a sum field for any groups
    */
   sumForGroups?: string[];
+
+  /**
+   * Checkbox group (only single member for a group can be selected)
+   */
+  checkboxGroup?: string;
 }

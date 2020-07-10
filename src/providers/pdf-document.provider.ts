@@ -2,17 +2,18 @@ import * as pdfjsLib from 'pdfjs-dist';
 //@ts-ignore
 import * as pdfjsViewer from 'pdfjs-dist/web/pdf_viewer';
 import { SUPPORTED_FORM_FIELD_TYPES, DEFAULT_SCALE } from '../constants';
-import { FIELD_SELECTOR_LIST } from '../config/fw4-2020-field-mapping.config';
+import { FIELD_SELECTOR_LIST } from '../config/fw4-2020/fw4-2020-field-mapping.config';
 import { last, flatten, uniq, isNumber } from 'lodash';
 import path from 'path';
 import { FieldConfiguration } from './field-configuration.provider';
+import { IFormConfiguration } from 'src/interfaces/form-configuraton';
 
 export class PDFDocument {
   public supportedAnnotations: any[] = [];
 
   constructor(
     private readonly documentUrl: string,
-    private readonly formFieldMappingMap: Map<string, Map<FIELD_SELECTOR_LIST, any>>,
+    private readonly formFieldMappingMap: Map<string, IFormConfiguration>,
     private readonly existingData: any,
     private readonly containerId: string
   ) {
@@ -27,7 +28,7 @@ export class PDFDocument {
   private get _formFieldMap(): Map<FIELD_SELECTOR_LIST, FieldConfiguration> {
     const map = this.formFieldMappingMap.get(this._pdfFileName);
     if (map) {
-      return map;
+      return map.fieldMap;
     }
     throw Error(`formFieldMappingMap for [${this._pdfFileName}] not found.`);
   }
@@ -58,6 +59,32 @@ export class PDFDocument {
 
     // Add summation for scripts
     this.addSummationScripts();
+
+    this.addCheckboxGroups();
+  }
+
+  /**
+   * Add single select only to checkbox groups
+   */
+  public addCheckboxGroups() {
+    const allCheckboxFields = this._formFields.filter(f => f.checkBoxGroup);
+    const allCheckboxGroups = uniq(allCheckboxFields.map(f => f.checkBoxGroup));
+
+    for (const checkBoxGroup of allCheckboxGroups) {
+      const checkGroupFields = allCheckboxFields.filter(f => f.checkBoxGroup === checkBoxGroup);
+
+      function _singleCheckboxSelectEvent(this: HTMLInputElement, ev: Event): any {
+        if (this.checked) {
+          // Uncheck others in group
+          checkGroupFields.forEach(f => (f.element.checked = false));
+          this.checked = true;
+        } else {
+          this.checked = false;
+        }
+      }
+
+      checkGroupFields.forEach(f => f.element.addEventListener('change', _singleCheckboxSelectEvent));
+    }
   }
 
   /**
