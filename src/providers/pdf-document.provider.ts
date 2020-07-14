@@ -1,4 +1,17 @@
 import * as pdfjsLib from 'pdfjs-dist';
+import { saveAs } from 'file-saver';
+import {
+  PDFDocument as PDFLibDocument,
+  PDFName,
+  PDFArray,
+  PDFBool,
+  PDFDict,
+  PDFHexString,
+  PDFString,
+  PDFNumber,
+} from 'pdf-lib';
+
+import axios from 'axios';
 //@ts-ignore
 import * as pdfjsViewer from 'pdfjs-dist/web/pdf_viewer';
 import { SUPPORTED_FORM_FIELD_TYPES, DEFAULT_SCALE } from '../constants';
@@ -153,14 +166,115 @@ export class PDFDocument {
   }
 
   /**
+   * TODO don't DL file twice. Just get once as ArrayBuffer and use same thing via
+   */
+  public async flattenPDF() {
+    const pdfDoc = await PDFLibDocument.load(await this._getPDFDocumentAsBuffer());
+
+    const data = this.getFormData();
+    const fields = this._getAcroFields(pdfDoc);
+    this._flattenFormValues(fields, data);
+    const pdfBytes = await pdfDoc.save();
+
+    var blob = new Blob([pdfBytes], { type: 'application/octet-stream' });
+    var fileName = 'myFileName.pdf';
+    saveAs(blob, fileName)
+  }
+
+  /**
+   * Writes form values to file and locks the pdf files (sets them as readonly)
+   */
+  private _flattenFormValues(fields: PDFDict[], data: any): void {
+    fields.forEach(field => {
+      let fieldName = field['dict'].get(PDFName.of('T'))?.value;
+      if (data[fieldName]) {
+        if (this._formFieldMap.get(fieldName)?.fieldType === SUPPORTED_FORM_FIELD_TYPES.CHECK_BOX) {
+          if (data[fieldName]) {
+            // Setting checkbox value doesn't work, see https://github.com/Hopding/pdf-lib/issues/109#issuecomment-658276982
+            field.set(PDFName.of('V'), PDFName.of('No'));
+            field.set(PDFName.of('AS'), PDFName.of('No'));
+          }
+        } else {
+          field.set(PDFName.of('V'), PDFString.of(data[fieldName]));
+        }
+      }
+      field.set(PDFName.of('Ff'), PDFNumber.of(1 /* Read Only */));
+    });
+  }
+
+  /**
+   * Get all AcroForm Fields
+   */
+  private _getAcroFields(pdfDoc: PDFLibDocument): PDFDict[] {
+    const rootFields = this._getRootAcroFields(pdfDoc);
+
+    const fields: PDFDict[] = [];
+    for (let idx = 0, len = rootFields.length; idx < len; idx++) {
+      fields.push(...this._recurseAcroFieldKids(rootFields[idx]));
+    }
+    return fields;
+  }
+
+  /**
+   * Get Root level AcroForm fields
+   */
+  private _getRootAcroFields(pdfDoc: PDFLibDocument) {
+    if (!pdfDoc.catalog.get(PDFName.of('AcroForm'))) return [];
+    const acroForm = pdfDoc.context.lookup(pdfDoc.catalog.get(PDFName.of('AcroForm')), PDFDict);
+
+    acroForm.set(PDFName.of('NeedAppearances'), PDFBool.True);
+
+    if (!acroForm.get(PDFName.of('Fields'))) return [];
+    const acroFieldRefs = acroForm.context.lookup(acroForm.get(PDFName.of('Fields')), PDFArray);
+
+    const acroFields = new Array<PDFDict>(acroFieldRefs.size());
+    for (let idx = 0, len = acroFieldRefs.size(); idx < len; idx++) {
+      acroFields[idx] = pdfDoc.context.lookup(acroFieldRefs.get(idx), PDFDict);
+    }
+
+    return acroFields;
+  }
+
+  /**
+   * Recursively iterates through any children form fields
+   */
+  private _recurseAcroFieldKids(field: PDFDict) {
+    const kids = field.lookupMaybe(PDFName.of('Kids'), PDFArray);
+    if (!kids) return [field];
+
+    const acroFields = new Array<PDFDict>(kids.size());
+    for (let idx = 0, len = kids.size(); idx < len; idx++) {
+      acroFields[idx] = field.context.lookup(kids.get(idx), PDFDict);
+    }
+
+    const flatKids: PDFDict[] = [];
+    for (let idx = 0, len = acroFields.length; idx < len; idx++) {
+      flatKids.push(...this._recurseAcroFieldKids(acroFields[idx]));
+    }
+
+    return flatKids;
+  }
+
+  private async _getPDFDocumentAsBuffer() {
+    return (await axios.get(this.documentUrl, {
+      responseType: 'arraybuffer',
+      headers: {
+        Accept: 'application/pdf',
+      },
+    }))?.data;
+  }
+
+  /**
    * Load PDF document and pages
    * Also retrieves (and sets) `PDFDocument.prototype.supportedAnnotations` with extract of form fields.
    */
   private async *_loadPDFPages() {
     const container = document.getElementById(this.containerId);
 
+    const buffer = await this._getPDFDocumentAsBuffer()
+
     // Fetch the PDF document from the URL using promises.
-    const doc = await pdfjsLib.getDocument(this.documentUrl).promise;
+    const doc = await pdfjsLib.getDocument({data: buffer}).promise;
 
     let supportedAnnotations: any[] = [];
 

@@ -1,51 +1,46 @@
 import { FieldConfiguration } from '../../providers/field-configuration.provider';
+import { SUPPORTED_FORM_FIELD_TYPES, SUPPORTED_DATA_TYPES } from '../../constants';
 
 export enum FIELD_SELECTOR_LIST {
-  FIRST_NAME_WITH_LAST_INITIAL = 'topmostSubform[0].Page1[0].Step1a[0].f1_01[0]',
-  LAST_NAME = 'topmostSubform[0].Page1[0].Step1a[0].f1_02[0]',
-  SIN_NUMBER = 'topmostSubform[0].Page1[0].f1_05[0]',
-  ADDRESS_1 = 'topmostSubform[0].Page1[0].Step1a[0].f1_03[0]',
-  ADDRESS_2 = 'topmostSubform[0].Page1[0].Step1a[0].f1_04[0]',
+  FIRST_NAME_WITH_LAST_INITIAL = 'firstNameWithMiddleInitial',
+  LAST_NAME = 'lastName',
+  SIN_NUMBER = 'sinNumber',
+  ADDRESS_1 = 'address1',
+  ADDRESS_2 = 'address2',
 
-  STEP_2_C = 'topmostSubform[0].Page1[0].Step2c[0].c1_2[0]',
+  STEP_2_C = 'step2C_onlyTwoJobs',
 
-  STEP_3_A = 'topmostSubform[0].Page1[0].Step3_ReadOrder[0].f1_06[0]',
-  STEP_3_B = 'topmostSubform[0].Page1[0].Step3_ReadOrder[0].f1_07[0]',
-  STEP_3_SUM = 'topmostSubform[0].Page1[0].f1_08[0]',
+  STEP_3_A = 'step3A_numChildrenUnder17Times2000',
+  STEP_3_B = 'step3B_numOtherDependentsTimes500',
+  STEP_3_SUM = 'step3_sum',
 
-  STEP_4_A = 'topmostSubform[0].Page1[0].f1_09[0]',
-  STEP_4_B = 'topmostSubform[0].Page1[0].f1_10[0]',
-  STEP_4_C = 'topmostSubform[0].Page1[0].f1_11[0]',
+  STEP_4_A = 'step4A_otherIncome',
+  STEP_4_B = 'step4B_deductions',
+  STEP_4_C = 'step4C_extraWithholding',
 
   SIGNATURE = 'signature',
   SIGNATURE_DATE = 'signatureDate',
 
-  STEP_4B_1 = 'topmostSubform[0].Page3[0].f3_07[0]',
-  STEP_4B_2 = 'topmostSubform[0].Page3[0].f3_08[0]',
-  STEP_4B_3 = 'topmostSubform[0].Page3[0].f3_09[0]',
-  STEP_4B_4 = 'topmostSubform[0].Page3[0].f3_10[0]',
-  STEP_4B_1_SUM = 'topmostSubform[0].Page3[0].f3_11[0]',
+  SINGLE_OR_MARRIED_FILING_SEPARATE = 'singleOrMarriedFilingSeparate',
+  MARRIED_FILING_JOINTLY = 'marriedFilingJointly',
+  HEAD_OF_HOUSEHOLD = 'headOfHousehold',
 
-  SINGLE_OR_MARRIED_FILING_SEPARATE = 'topmostSubform[0].Page1[0].c1_1[0]',
-  MARRIED_FILING_JOINTLY = 'topmostSubform[0].Page1[0].c1_1[1]',
-  HEAD_OF_HOUSEHOLD = 'topmostSubform[0].Page1[0].c1_1[2]',
+  EMPLOYERS_NAME_AND_ADDRESS = 'employersNameAndAddress',
+  FIRST_DATE_OF_EMPLOYMENT = 'firstDateOfEmployment',
+  EMPLOYERS_EIN = 'employersEIN',
 
-  EMPLOYERS_NAME_AND_ADDRESS = 'topmostSubform[0].Page1[0].f1_13[0]',
-  FIRST_DATE_OF_EMPLOYMENT = 'topmostSubform[0].Page1[0].f1_14[0]',
-  EMPLOYERS_EIN = 'topmostSubform[0].Page1[0].f1_15[0]',
+  WORKSHEET_MULTI_JOBS_1 = 'worksheetMultiJob1',
+  WORKSHEET_MULTI_JOBS_2A = 'worksheetMultiJob2A',
+  WORKSHEET_MULTI_JOBS_2B = 'worksheetMultiJob2B',
+  WORKSHEET_MULTI_JOBS_2C = 'worksheetMultiJob2C',
+  WORKSHEET_MULTI_JOBS_3 = 'worksheetMultiJob3',
+  WORKSHEET_MULTI_JOBS_4 = 'worksheetMultiJob4',
 
-  WORKSHEET_MULTI_JOBS_1 = 'topmostSubform[0].Page3[0].f3_01[0]',
-  WORKSHEET_MULTI_JOBS_2A = 'topmostSubform[0].Page3[0].f3_02[0]',
-  WORKSHEET_MULTI_JOBS_2B = 'topmostSubform[0].Page3[0].f3_03[0]',
-  WORKSHEET_MULTI_JOBS_2C = 'topmostSubform[0].Page3[0].f3_04[0]',
-  WORKSHEET_MULTI_JOBS_3 = 'topmostSubform[0].Page3[0].f3_05[0]',
-  WORKSHEET_MULTI_JOBS_4 = 'topmostSubform[0].Page3[0].f3_06[0]',
-
-  WORKSHEET_DEDUCTIONS_1 = 'topmostSubform[0].Page3[0].f3_07[0]',
-  WORKSHEET_DEDUCTIONS_2 = 'topmostSubform[0].Page3[0].f3_08[0]',
-  WORKSHEET_DEDUCTIONS_3 = 'topmostSubform[0].Page3[0].f3_09[0]',
-  WORKSHEET_DEDUCTIONS_4 = 'topmostSubform[0].Page3[0].f3_10[0]',
-  WORKSHEET_DEDUCTIONS_5 = 'topmostSubform[0].Page3[0].f3_11[0]',
+  WORKSHEET_DEDUCTIONS_1 = 'worksheetDeduction1',
+  WORKSHEET_DEDUCTIONS_2 = 'worksheetDeduction2',
+  WORKSHEET_DEDUCTIONS_3 = 'worksheetDeduction3',
+  WORKSHEET_DEDUCTIONS_4 = 'worksheetDeduction4',
+  WORKSHEET_DEDUCTIONS_5 = 'worksheetDeduction5',
 }
 
 /**
@@ -102,6 +97,8 @@ export const DOCUMENT_ACROFORM_FIELD_MAP = new Map<FIELD_SELECTOR_LIST, FieldCon
   [
     FIELD_SELECTOR_LIST.SINGLE_OR_MARRIED_FILING_SEPARATE,
     new FieldConfiguration('singleOrMarriedFilingSeparate', FIELD_SELECTOR_LIST.SINGLE_OR_MARRIED_FILING_SEPARATE, {
+      fieldType: SUPPORTED_FORM_FIELD_TYPES.CHECK_BOX,
+      dataType: SUPPORTED_DATA_TYPES.BOOLEAN,
       getValueFn: (): boolean =>
         FieldConfiguration.CHECKBOX_VALUE_BY_NAME(FIELD_SELECTOR_LIST.SINGLE_OR_MARRIED_FILING_SEPARATE),
       options: {
@@ -112,6 +109,8 @@ export const DOCUMENT_ACROFORM_FIELD_MAP = new Map<FIELD_SELECTOR_LIST, FieldCon
   [
     FIELD_SELECTOR_LIST.MARRIED_FILING_JOINTLY,
     new FieldConfiguration('marriedFilingJointly', FIELD_SELECTOR_LIST.MARRIED_FILING_JOINTLY, {
+      fieldType: SUPPORTED_FORM_FIELD_TYPES.CHECK_BOX,
+      dataType: SUPPORTED_DATA_TYPES.BOOLEAN,
       getValueFn: (): boolean => FieldConfiguration.CHECKBOX_VALUE_BY_NAME(FIELD_SELECTOR_LIST.MARRIED_FILING_JOINTLY),
       options: {
         checkboxGroup: 'FILING_STATUS',
@@ -121,6 +120,8 @@ export const DOCUMENT_ACROFORM_FIELD_MAP = new Map<FIELD_SELECTOR_LIST, FieldCon
   [
     FIELD_SELECTOR_LIST.HEAD_OF_HOUSEHOLD,
     new FieldConfiguration('headOfHousehold', FIELD_SELECTOR_LIST.HEAD_OF_HOUSEHOLD, {
+      fieldType: SUPPORTED_FORM_FIELD_TYPES.CHECK_BOX,
+      dataType: SUPPORTED_DATA_TYPES.BOOLEAN,
       getValueFn: (): boolean => FieldConfiguration.CHECKBOX_VALUE_BY_NAME(FIELD_SELECTOR_LIST.HEAD_OF_HOUSEHOLD),
       options: {
         checkboxGroup: 'FILING_STATUS',
@@ -130,6 +131,8 @@ export const DOCUMENT_ACROFORM_FIELD_MAP = new Map<FIELD_SELECTOR_LIST, FieldCon
   [
     FIELD_SELECTOR_LIST.STEP_2_C,
     new FieldConfiguration('step2C_onlyTwoJobs', FIELD_SELECTOR_LIST.STEP_2_C, {
+      fieldType: SUPPORTED_FORM_FIELD_TYPES.CHECK_BOX,
+      dataType: SUPPORTED_DATA_TYPES.BOOLEAN,
       getValueFn: (): boolean => FieldConfiguration.CHECKBOX_VALUE_BY_NAME(FIELD_SELECTOR_LIST.STEP_2_C),
     }),
   ],

@@ -46,5 +46,6 @@ document.addEventListener('DOMContentLoaded', async function () {
    */
   async function _getDataButtonClicked() {
     console.log(pdfDocument.getFormData());
+    await pdfDocument.flattenPDF();
   }
 });
