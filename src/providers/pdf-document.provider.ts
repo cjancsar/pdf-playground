@@ -178,7 +178,7 @@ export class PDFDocument {
 
     var blob = new Blob([pdfBytes], { type: 'application/octet-stream' });
     var fileName = 'myFileName.pdf';
-    saveAs(blob, fileName)
+    saveAs(blob, fileName);
   }
 
   /**
@@ -256,12 +256,14 @@ export class PDFDocument {
   }
 
   private async _getPDFDocumentAsBuffer() {
-    return (await axios.get(this.documentUrl, {
-      responseType: 'arraybuffer',
-      headers: {
-        Accept: 'application/pdf',
-      },
-    }))?.data;
+    return (
+      await axios.get(this.documentUrl, {
+        responseType: 'arraybuffer',
+        headers: {
+          Accept: 'application/pdf',
+        },
+      })
+    )?.data;
   }
 
   /**
@@ -271,10 +273,10 @@ export class PDFDocument {
   private async *_loadPDFPages() {
     const container = document.getElementById(this.containerId);
 
-    const buffer = await this._getPDFDocumentAsBuffer()
+    const buffer = await this._getPDFDocumentAsBuffer();
 
     // Fetch the PDF document from the URL using promises.
-    const doc = await pdfjsLib.getDocument({data: buffer}).promise;
+    const doc = await pdfjsLib.getDocument({ data: buffer }).promise;
 
     let supportedAnnotations: any[] = [];
 
