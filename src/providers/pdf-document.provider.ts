@@ -9,6 +9,7 @@ import {
   PDFHexString,
   PDFString,
   PDFNumber,
+  PDFRef,
 } from 'pdf-lib';
 
 import axios from 'axios';
@@ -173,7 +174,7 @@ export class PDFDocument {
 
     const data = this.getFormData();
     const fields = this._getAcroFields(pdfDoc);
-    this._flattenFormValues(fields, data);
+    this._flattenFormValues(fields, data, pdfDoc);
     const pdfBytes = await pdfDoc.save();
 
     var blob = new Blob([pdfBytes], { type: 'application/octet-stream' });
@@ -184,15 +185,23 @@ export class PDFDocument {
   /**
    * Writes form values to file and locks the pdf files (sets them as readonly)
    */
-  private _flattenFormValues(fields: PDFDict[], data: any): void {
+  private _flattenFormValues(fields: PDFDict[], data: any, pdfDoc: PDFLibDocument): void {
     fields.forEach(field => {
       let fieldName = field['dict'].get(PDFName.of('T'))?.value;
       if (data[fieldName]) {
         if (this._formFieldMap.get(fieldName)?.fieldType === SUPPORTED_FORM_FIELD_TYPES.CHECK_BOX) {
           if (data[fieldName]) {
             // Setting checkbox value doesn't work, see https://github.com/Hopding/pdf-lib/issues/109#issuecomment-658276982
-            field.set(PDFName.of('V'), PDFName.of('No'));
-            field.set(PDFName.of('AS'), PDFName.of('No'));
+            // console.log('1', field)
+            // field.set(PDFName.of('NeedAppearances'), PDFBool.True);
+            // field.set(PDFName.of('V'), PDFName.of('Yes'));
+            // field.set(PDFName.of('AS'), PDFName.of('Yes'));
+            let checkBoxLocation: any = field.get(PDFName.of('Rect'))
+            this._getPageOfField(pdfDoc, field).drawText('x', {
+              x: checkBoxLocation.array[0].numberValue+1,
+              y: checkBoxLocation.array[1].numberValue+1,
+              size: 12,
+            })
           }
         } else {
           field.set(PDFName.of('V'), PDFString.of(data[fieldName]));
@@ -200,6 +209,35 @@ export class PDFDocument {
       }
       field.set(PDFName.of('Ff'), PDFNumber.of(1 /* Read Only */));
     });
+  }
+
+  /**
+   * Attempts to find the page that a field is located on, and returns it.
+   * 
+   * Returns undefined if cannot associate a field to a page.
+   * 
+   * Currently used for drawing an "x" on checkboxes during flatten/saving of PDF since
+   * setting checkbox traditionally value doesn't work. 
+   * ee https://github.com/Hopding/pdf-lib/issues/109#issuecomment-658276982
+   * 
+   * @param pdfDoc 
+   * @param field 
+   */
+  private _getPageOfField(pdfDoc: PDFLibDocument, field: PDFDict){
+    const fieldPageQuery = field.get(PDFName.of('P')) as PDFRef
+    let fieldObjectNumber: number
+    if (fieldPageQuery) {
+      fieldObjectNumber = fieldPageQuery.objectNumber
+    }
+    else {
+      throw Error('Unable to find page of field')
+    }
+    for (const page of pdfDoc.getPages()) {
+      if (page.ref.objectNumber === fieldObjectNumber) {
+        return page
+      }
+    }
+    throw Error('Unable to find page of field')
   }
 
   /**
