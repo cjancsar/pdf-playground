@@ -24,6 +24,7 @@ import { IFormConfiguration } from 'src/interfaces/form-configuraton';
 
 export class PDFDocument {
   public supportedAnnotations: any[] = [];
+  private _documentBuffer: any;
 
   constructor(
     private readonly documentUrl: string,
@@ -167,7 +168,7 @@ export class PDFDocument {
   }
 
   /**
-   * TODO don't DL file twice. Just get once as ArrayBuffer and use same thing via
+   * Flatten form data into PDF and then save to buffer
    */
   public async flattenPDF() {
     const pdfDoc = await PDFLibDocument.load(await this._getPDFDocumentAsBuffer());
@@ -294,7 +295,11 @@ export class PDFDocument {
   }
 
   private async _getPDFDocumentAsBuffer() {
-    return (
+    if (this._documentBuffer) {
+      return this._documentBuffer;
+    }
+
+    this._documentBuffer = (
       await axios.get(this.documentUrl, {
         responseType: 'arraybuffer',
         headers: {
@@ -302,6 +307,7 @@ export class PDFDocument {
         },
       })
     )?.data;
+    return this._documentBuffer;
   }
 
   /**
